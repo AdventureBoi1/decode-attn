@@ -217,6 +217,22 @@ def _decode_reduce(
     tl.store(out_ptr + batch * stride_ob + hq * stride_oh + offs_d * stride_od, stored, mask=d_mask)
 
 
+_WORK = {}
+
+
+def _workspace(b: int, hq: int, n_splits: int, d: int, device: torch.device):
+    key = (device.type, device.index, b, hq, n_splits, d)
+    found = _WORK.get(key)
+    if found is None:
+        found = (
+            torch.empty(b, hq, n_splits, device=device, dtype=torch.float32),
+            torch.empty(b, hq, n_splits, device=device, dtype=torch.float32),
+            torch.empty(b, hq, n_splits, d, device=device, dtype=torch.float32),
+        )
+        _WORK[key] = found
+    return found
+
+
 def decode_attention_out(
     q: torch.Tensor,
     k: torch.Tensor,
@@ -237,9 +253,7 @@ def decode_attention_out(
     if tile > split:
         raise ValueError("DECODE_ATTN_TILE cannot exceed DECODE_ATTN_SPLIT")
     n_splits = triton.cdiv(s, split)
-    m_part = torch.empty(b, hq, n_splits, device=q.device, dtype=torch.float32)
-    l_part = torch.empty(b, hq, n_splits, device=q.device, dtype=torch.float32)
-    acc_part = torch.empty(b, hq, n_splits, d, device=q.device, dtype=torch.float32)
+    m_part, l_part, acc_part = _workspace(b, hq, n_splits, d, q.device)
     _decode_partial[(b, hkv, n_splits)](
         q,
         k,

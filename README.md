@@ -49,6 +49,16 @@ The cache is cut into splits (256 tokens at 16k, 512 at 4k, 128 at 1k). Each pro
 
 `q` is `[B, Hq, D]` or `[B, Hq, 1, D]`. `k` and `v` are `[B, Hkv, S, D]`, the cache including the new token. `Hq` must be divisible by `Hkv`. There is no backward.
 
+## Demo
+
+On the machine with the GPU:
+
+```
+python -m decode_attn.demo
+```
+
+Open http://127.0.0.1:8765. Press start. Both bars are the same sentence. The microseconds were measured on that click. The motion is slowed so the gap is visible.
+
 ## Reproduce
 
 ```
