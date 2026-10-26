@@ -2,7 +2,27 @@
 
 Single-token grouped-query attention. One new query reads a KV cache that is split across the GPU, and every query head that shares a KV head reuses that tile instead of reading it again. A second kernel merges the partial softmax state.
 
-This is the attention half of a decode step. The MLP half is [fused-decode](../fused-decode). PyTorch 2.11 on Windows is not built with FlashAttention, and its memory-efficient kernel rejects this head layout (`Hq=32`, `Hkv=8`). `scaled_dot_product_attention` therefore runs the math kernel. That is the baseline below.
+This is the attention half of a decode step. The MLP half is [fused-decode](https://github.com/AdventureBoi1/fused-decode). PyTorch 2.11 on Windows is not built with FlashAttention, and its memory-efficient kernel rejects this head layout (`Hq=32`, `Hkv=8`). `scaled_dot_product_attention` therefore runs the math kernel. That is the baseline below.
+
+## Install
+
+Install a CUDA PyTorch wheel first, then:
+
+```
+pip install git+https://github.com/AdventureBoi1/decode-attn.git
+```
+
+```python
+import torch.nn.functional as F
+import decode_attn
+
+decode_attn.enable()
+# q: [B, Hq, 1, D], k/v: [B, Hkv, S, D]
+y = F.scaled_dot_product_attention(q, k, v, enable_gqa=True)
+decode_attn.disable()
+```
+
+`enable` only replaces single-token CUDA calls in float16 or bfloat16. A longer prompt, a mask, or dropout stays on PyTorch. Call `enable` before another file does `from torch.nn.functional import scaled_dot_product_attention`.
 
 ## Result
 

@@ -1,7 +1,9 @@
 import pytest
 import torch
 
-from decode_attn import decode_attention
+import torch.nn.functional as F
+
+from decode_attn import decode_attention, disable, enable, fast_calls
 from decode_attn.reference import decode_attention_reference
 
 pytestmark = pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
@@ -44,6 +46,30 @@ def test_rank4_query_and_strided_cache():
     ref = decode_attention_reference(q, k, v)
     assert out.shape == (1, 4, 1, 32)
     torch.testing.assert_close(out, ref[:, :, None, :], rtol=2e-2, atol=2e-2)
+
+
+def test_sdpa_enable_routes_decode_and_leaves_prefill():
+    torch.manual_seed(2)
+    enable()
+    try:
+        before = fast_calls()
+        q = torch.randn(1, 4, 1, 32, device="cuda", dtype=torch.float16)
+        k = torch.randn(1, 2, 20, 32, device="cuda", dtype=torch.float16)
+        v = torch.randn_like(k)
+        out = F.scaled_dot_product_attention(q, k, v, is_causal=True, enable_gqa=True)
+        ref = decode_attention_reference(q, k, v)[:, :, None, :]
+        torch.testing.assert_close(out, ref, rtol=2e-2, atol=2e-2)
+        assert fast_calls() == before + 1
+
+        prefill_q = torch.randn(1, 4, 3, 32, device="cuda", dtype=torch.float16)
+        prefill_k = torch.randn(1, 4, 3, 32, device="cuda", dtype=torch.float16)
+        prefill_v = torch.randn_like(prefill_k)
+        prefill = F.scaled_dot_product_attention(prefill_q, prefill_k, prefill_v)
+        assert prefill.shape == (1, 4, 3, 32)
+        assert fast_calls() == before + 1
+    finally:
+        disable()
+    assert not getattr(F.scaled_dot_product_attention, "_decode_attn", False)
 
 
 def test_rejected_inputs():
