@@ -1,0 +1,111 @@
+{
+  "gpu": "NVIDIA GeForce RTX 4070 Laptop GPU",
+  "torch": "2.11.0+cu128",
+  "copy_gbs": 223.5578989079445,
+  "sdpa_backends": {
+    "CUDNN_ATTENTION": "ok",
+    "EFFICIENT_ATTENTION": "RuntimeError: No available kernel. Aborting execution.",
+    "ERROR": "RuntimeError: No viable backend for scaled_dot_product_attention was found. This is likely due to turning off both the math kernel and the fused kernels.",
+    "FLASH_ATTENTION": "RuntimeError: No available kernel. Aborting execution.",
+    "MATH": "ok",
+    "OVERRIDEABLE": "RuntimeError: No viable backend for scaled_dot_product_attention was found. This is likely due to turning off both the math kernel and the fused kernels."
+  },
+  "rows": [
+    {
+      "name": "S=128 float16",
+      "us": 56.38826688130696,
+      "sdpa_us": 220.39893468221027,
+      "math_us": 261.2234592437744,
+      "speedup_vs_sdpa": 3.908595650689768,
+      "speedup_vs_math": 4.6325853531485555,
+      "gbs": 9.443099237662867,
+      "pct_copy_roof": 4.224006077974144,
+      "max_abs_vs_fp32": 0.00048828125,
+      "bytes": 532480
+    },
+    {
+      "name": "S=1024 float16",
+      "us": 61.88799937566122,
+      "sdpa_us": 522.5813229878743,
+      "math_us": 523.5701243082682,
+      "speedup_vs_sdpa": 8.443984750836696,
+      "speedup_vs_math": 8.4599620215575,
+      "gbs": 67.90486107800605,
+      "pct_copy_roof": 30.374619465343766,
+      "max_abs_vs_fp32": 0.0001220703125,
+      "bytes": 4202496
+    },
+    {
+      "name": "S=4096 float16",
+      "us": 109.39733187357585,
+      "sdpa_us": 2218.3937072753906,
+      "math_us": 2210.474650065104,
+      "speedup_vs_sdpa": 20.278316383794987,
+      "speedup_vs_math": 20.205928354995176,
+      "gbs": 153.43525945767968,
+      "pct_copy_roof": 68.6333429537466,
+      "max_abs_vs_fp32": 6.103515625e-05,
+      "bytes": 16785408
+    },
+    {
+      "name": "S=16384 float16",
+      "us": 319.59040959676105,
+      "sdpa_us": 8476.023356119791,
+      "math_us": 8342.596435546875,
+      "speedup_vs_sdpa": 26.521519737761533,
+      "speedup_vs_math": 26.104026231804124,
+      "gbs": 210.0096059975143,
+      "pct_copy_roof": 93.93969393315464,
+      "max_abs_vs_fp32": 3.0517578125e-05,
+      "bytes": 67117056
+    },
+    {
+      "name": "S=128 bfloat16",
+      "us": 159.87307230631512,
+      "sdpa_us": 231.79945945739746,
+      "math_us": 289.10932540893555,
+      "speedup_vs_sdpa": 1.4498968219818291,
+      "speedup_vs_math": 1.8083678585659824,
+      "gbs": 3.3306421920745604,
+      "pct_copy_roof": 1.4898342703811307,
+      "max_abs_vs_fp32": 0.00390625,
+      "bytes": 532480
+    },
+    {
+      "name": "S=1024 bfloat16",
+      "us": 148.65172704060873,
+      "sdpa_us": 527.5306701660156,
+      "math_us": 529.3738683064778,
+      "speedup_vs_sdpa": 3.5487691980995595,
+      "speedup_vs_math": 3.561168637898591,
+      "gbs": 28.270751263131714,
+      "pct_copy_roof": 12.645829738618582,
+      "max_abs_vs_fp32": 0.0009765625,
+      "bytes": 4202496
+    },
+    {
+      "name": "S=4096 bfloat16",
+      "us": 134.6560001373291,
+      "sdpa_us": 2224.2645263671875,
+      "math_us": 2215.6288146972656,
+      "speedup_vs_sdpa": 16.518124139279113,
+      "speedup_vs_math": 16.453992487803394,
+      "gbs": 124.65399226830873,
+      "pct_copy_roof": 55.75915361399871,
+      "max_abs_vs_fp32": 0.00048828125,
+      "bytes": 16785408
+    },
+    {
+      "name": "S=16384 bfloat16",
+      "us": 319.8293368021647,
+      "sdpa_us": 8487.14650472005,
+      "math_us": 8357.95644124349,
+      "speedup_vs_sdpa": 26.536485331769,
+      "speedup_vs_math": 26.132550956116425,
+      "gbs": 209.85271917540285,
+      "pct_copy_roof": 93.86951666682774,
+      "max_abs_vs_fp32": 0.000244140625,
+      "bytes": 67117056
+    }
+  ]
+}
