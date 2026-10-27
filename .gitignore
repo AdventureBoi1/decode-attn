@@ -1,4 +1,6 @@
 .venv/
+.venv-nightly/
+nightly_bench.py
 __pycache__/
 *.py[cod]
 *.egg-info/

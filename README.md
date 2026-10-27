@@ -39,7 +39,19 @@ At a 16k cache the kernel is **27×** the PyTorch call and at **94%** of the cop
 
 The 4k row is a 16MB working set, so it can sit in L2. It also moves with the laptop's clocks: another pass of the same shape on this card was 68 µs. The 16k row was 320 µs both times. A 128-token cache is launch-bound (56 µs fp16 against PyTorch at 220 µs).
 
-FlashAttention is not in this wheel (`Torch was not compiled with flash attention`). The memory-efficient kernel refuses unequal query and KV head counts. Forcing cuDNN returned a result in the probe, and the default dispatcher still took the same time as the math backend. The speedup is against the kernel PyTorch actually runs here, not against a Linux FlashAttention build.
+FlashAttention is not in the 2.11 wheel (`Torch was not compiled with flash attention`). The memory-efficient kernel refuses unequal query and KV head counts. Forcing cuDNN returned a result in the probe, and the default dispatcher still took the same time as the math backend. The speedup above is against the kernel PyTorch 2.11 actually runs here, not against a Linux FlashAttention build.
+
+## Nightly retest
+
+After the report, a PyTorch engineer said Windows FlashAttention landed on main and in the nightlies ([#202156](https://github.com/pytorch/pytorch/issues/202156)). On this same 4070, `2.16.0.dev20261026+cu132` reports `is_flash_attention_available() == True`. The 2.11 install was left untouched.
+
+| Cache | 2.11 SDPA | Nightly default SDPA | Nightly FlashAttention | This kernel |
+| --- | ---: | ---: | ---: | ---: |
+| 1024 fp16 | 523 µs | 31 µs | 48 µs | 66 µs |
+| 4096 fp16 | 2.22 ms | 201 µs | 290 µs | 71 µs |
+| 16384 fp16 | 8.48 ms | 300 µs | 310 µs | 337 µs |
+
+At 16k the nightly kernel and this one are both on the copy roof. The nightly is a bit ahead. At 4k this split kernel is still faster on this laptop. The math backend on the nightly is still about 8.5 ms at 16k, so the 2.11 number was the math fallback, and that fallback is gone in the nightly.
 
 ## Algorithm
 
