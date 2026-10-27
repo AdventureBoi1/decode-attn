@@ -14,6 +14,29 @@ from decode_attn.ops import decode_attention
 _original = None
 _fast_calls = 0
 _DTYPES = (torch.float16, torch.bfloat16)
+# Against nightly 2.16.0.dev20261026+cu132 on an RTX 4070 Laptop, this kernel
+# was slower at 512, 1024, and 2048, faster at 4096 and 8192, and tied at 16384.
+_FLASH_WIN_MIN = 4096
+_FLASH_WIN_MAX = 8192
+
+
+def flash_attention_available() -> bool:
+    probe = getattr(torch.backends.cuda, "is_flash_attention_available", None)
+    if probe is None:
+        return False
+    try:
+        return bool(probe())
+    except Exception:
+        return False
+
+
+def should_route(seq_len: int, flash_available: bool) -> bool:
+    """Use this kernel when it beat PyTorch on the measured 4070."""
+    if seq_len < 1:
+        return False
+    if not flash_available:
+        return True
+    return _FLASH_WIN_MIN <= seq_len <= _FLASH_WIN_MAX
 
 
 def fast_calls() -> int:
@@ -46,6 +69,8 @@ def _route(*args, **kwargs):
     if hq != hkv and not (enable_gqa and hkv > 0 and hq % hkv == 0):
         return None
     if hq % hkv != 0:
+        return None
+    if not should_route(key.shape[-2], flash_attention_available()):
         return None
     # q_len == 1 with the bottom-right causal mask attends to every key.
     _ = is_causal

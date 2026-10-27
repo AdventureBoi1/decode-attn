@@ -22,7 +22,7 @@ y = F.scaled_dot_product_attention(q, k, v, enable_gqa=True)
 decode_attn.disable()
 ```
 
-`enable` only replaces single-token CUDA calls in float16 or bfloat16. A longer prompt, a mask, or dropout stays on PyTorch. Call `enable` before another file does `from torch.nn.functional import scaled_dot_product_attention`.
+`enable` only replaces single-token CUDA calls in float16 or bfloat16. A longer prompt, a mask, or dropout stays on PyTorch. If this install has FlashAttention, the hook only takes cache lengths 4096 through 8192, which is where it beat the nightly on a 4070. Shorter and longer caches stay on PyTorch. Without FlashAttention it takes every one-token call, which is the win on the 2.11 wheel. Call `enable` before another file does `from torch.nn.functional import scaled_dot_product_attention`.
 
 ## Result
 

@@ -3,7 +3,7 @@ import torch
 
 import torch.nn.functional as F
 
-from decode_attn import decode_attention, disable, enable, fast_calls
+from decode_attn import decode_attention, disable, enable, fast_calls, should_route
 from decode_attn.reference import decode_attention_reference
 
 pytestmark = pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
@@ -46,6 +46,16 @@ def test_rank4_query_and_strided_cache():
     ref = decode_attention_reference(q, k, v)
     assert out.shape == (1, 4, 1, 32)
     torch.testing.assert_close(out, ref[:, :, None, :], rtol=2e-2, atol=2e-2)
+
+
+def test_route_only_where_this_kernel_wins():
+    assert should_route(20, flash_available=False)
+    assert should_route(16384, flash_available=False)
+    assert not should_route(1024, flash_available=True)
+    assert not should_route(2048, flash_available=True)
+    assert should_route(4096, flash_available=True)
+    assert should_route(8192, flash_available=True)
+    assert not should_route(16384, flash_available=True)
 
 
 def test_sdpa_enable_routes_decode_and_leaves_prefill():
